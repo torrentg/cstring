@@ -15,7 +15,7 @@ coverage: cstring-tests.cpp
 	./cstring-coverage
 	mkdir coverage
 	lcov --no-external -d . -o coverage/coverage.info -c
-	lcov --remove coverage/coverage.info '*/catch.hpp' -o coverage/coverage.info
+	lcov --remove coverage/coverage.info '*/doctest.h' -o coverage/coverage.info
 	lcov --remove coverage/coverage.info '*/cstring-tests.cpp' -o coverage/coverage.info
 	genhtml -o coverage coverage/coverage.info
 

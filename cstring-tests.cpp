@@ -1,8 +1,8 @@
-#define CATCH_CONFIG_MAIN
+#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 
 #include <sstream>
 #include <cstring>
-#include "catch.hpp"
+#include "doctest.h"
 #include "cstring.hpp"
 
 using namespace std;
@@ -15,11 +15,11 @@ using namespace gto;
 // firefox coverage/index.html
 TEST_CASE("cstring") {
 
-  SECTION("sizeof") {
+  SUBCASE("sizeof") {
     CHECK(sizeof(cstring) == sizeof(char *));
   }
 
-  SECTION("constructor (empty string)") {
+  SUBCASE("constructor (empty string)") {
     cstring empty1;
     CHECK(empty1.size() == 0);
     CHECK(empty1.length() == 0);
@@ -58,7 +58,7 @@ TEST_CASE("cstring") {
     }
   }
 
-  SECTION("constructor (generic)") {
+  SUBCASE("constructor (generic)") {
     {
       cstring str("abc");
       CHECK(str.size() == 3);
@@ -88,7 +88,7 @@ TEST_CASE("cstring") {
     }
   }
 
-  SECTION("assignment") {
+  SUBCASE("assignment") {
     {
       cstring str1("abc");
       cstring str2("xyz");
@@ -107,7 +107,7 @@ TEST_CASE("cstring") {
     }
   }
 
-  SECTION("move") {
+  SUBCASE("move") {
     cstring str1("abc");
     cstring str2("xyz");
     CHECK(str1.data() != str2.data());
@@ -117,12 +117,12 @@ TEST_CASE("cstring") {
     CHECK(str2.data() == string("abc"));
   }
 
-  SECTION("empty") {
+  SUBCASE("empty") {
     CHECK(!cstring("abc").empty());
     CHECK(cstring("").empty());
   }
 
-  SECTION("get char") {
+  SUBCASE("get char") {
     cstring str1("abc");
     CHECK(str1[0] == 'a');
     CHECK(str1.at(0) == 'a');
@@ -135,13 +135,13 @@ TEST_CASE("cstring") {
     CHECK(str1.back() == 'c');
   }
 
-  SECTION("data") {
+  SUBCASE("data") {
     cstring str("abc");
     CHECK(std::strcmp(str.data(), "abc") == 0);
     CHECK(std::strcmp(str.c_str(), "abc") == 0);
   }
 
-  SECTION("iterator") {
+  SUBCASE("iterator") {
     cstring str("abc");
     auto it = str.cbegin();
     CHECK(*it == 'a');
@@ -153,7 +153,7 @@ TEST_CASE("cstring") {
     CHECK(it == str.cend());
   }
 
-  SECTION("reverse iterator") {
+  SUBCASE("reverse iterator") {
     cstring str("abc");
     auto it = str.crbegin();
     CHECK(*it == 'c');
@@ -165,7 +165,7 @@ TEST_CASE("cstring") {
     CHECK(it == str.crend());
   }
 
-  SECTION("swap") {
+  SUBCASE("swap") {
     cstring str1("abc");
     cstring str2("xyz");
     str1.swap(str2);
@@ -173,7 +173,7 @@ TEST_CASE("cstring") {
     CHECK(str2.data() == std::string("abc"));
   }
 
-  SECTION("substr") {
+  SUBCASE("substr") {
     cstring str("hello world");
     CHECK(str.substr() == std::string("hello world"));
     CHECK(str.substr(0) == std::string("hello world"));
@@ -187,7 +187,7 @@ TEST_CASE("cstring") {
     CHECK(str.substr(6, 999) == std::string("world"));
   }
 
-  SECTION("compare") {
+  SUBCASE("compare") {
     CHECK(cstring("").compare(cstring("")) == 0);
     CHECK(cstring("").compare(cstring("abc")) < 0);
     CHECK(cstring("abc").compare(cstring("")) > 0);
@@ -225,7 +225,7 @@ TEST_CASE("cstring") {
     CHECK(cstring("hello world").compare(6, 5, "world x", 6) < 0);
   }
 
-  SECTION("starts_with") {
+  SUBCASE("starts_with") {
     CHECK(cstring("hello world").starts_with(cstring("hell")));
     CHECK(!cstring("hello world").starts_with(cstring("ello")));
 
@@ -239,7 +239,7 @@ TEST_CASE("cstring") {
     CHECK(!cstring("hello world").starts_with("ello"));
   }
 
-  SECTION("ends_with") {
+  SUBCASE("ends_with") {
     CHECK(cstring("hello world").ends_with(cstring("world")));
     CHECK(!cstring("hello world").ends_with(cstring("worlds")));
 
@@ -253,7 +253,7 @@ TEST_CASE("cstring") {
     CHECK(!cstring("hello world").ends_with("worl"));
   }
 
-  SECTION("find") {
+  SUBCASE("find") {
     CHECK(cstring("abcdef").find(cstring("")) == 0);
     CHECK(cstring("abcdef").find(cstring("cde")) == 2);
     CHECK(cstring("abcdef").find(cstring("cde"), 0) == 2);
@@ -285,7 +285,7 @@ TEST_CASE("cstring") {
     CHECK(cstring("abcdef").find('c', 3) == cstring::npos);
   }
 
-  SECTION("rfind") {
+  SUBCASE("rfind") {
     CHECK(cstring("abcdef").rfind(cstring("cde")) == 2);
     CHECK(cstring("abcdef").rfind(cstring("cde"), 7) == 2);
     CHECK(cstring("abcdef").rfind(cstring("cde"), 6) == 2);
@@ -322,7 +322,7 @@ TEST_CASE("cstring") {
     CHECK(cstring("abcdef").rfind('c', 1) == cstring::npos);
   }
 
-  SECTION("find_first_of") {
+  SUBCASE("find_first_of") {
     CHECK(cstring("abcdef").find_first_of(cstring("dc")) == 2);
     CHECK(cstring("abcdef").find_first_of(cstring("dc"), 0) == 2);
     CHECK(cstring("abcdef").find_first_of(cstring("dc"), 1) == 2);
@@ -355,7 +355,7 @@ TEST_CASE("cstring") {
     CHECK(cstring("abcdef").find_first_of('c', 3) == cstring::npos);
   }
 
-  SECTION("find_first_not_of") {
+  SUBCASE("find_first_not_of") {
     CHECK(cstring("abcdef").find_first_not_of(cstring("abef")) == 2);
     CHECK(cstring("abcdef").find_first_not_of(cstring("abef"), 0) == 2);
     CHECK(cstring("abcdef").find_first_not_of(cstring("abef"), 1) == 2);
@@ -386,7 +386,7 @@ TEST_CASE("cstring") {
     CHECK(cstring("abcdef").find_first_not_of('a', 1) == 1);
   }
 
-  SECTION("find_last_of") {
+  SUBCASE("find_last_of") {
     CHECK(cstring("abcdef").find_last_of(cstring("cd")) == 3);
     CHECK(cstring("abcdef").find_last_of(cstring("cd"), 5) == 3);
     CHECK(cstring("abcdef").find_last_of(cstring("cd"), 4) == 3);
@@ -421,7 +421,7 @@ TEST_CASE("cstring") {
   }
 
 
-  SECTION("find_last_not_of") {
+  SUBCASE("find_last_not_of") {
     CHECK(cstring("abcdef").find_last_not_of(cstring("abef")) == 3);
     CHECK(cstring("abcdef").find_last_not_of(cstring("abef"), 5) == 3);
     CHECK(cstring("abcdef").find_last_not_of(cstring("abef"), 4) == 3);
@@ -457,7 +457,7 @@ TEST_CASE("cstring") {
     CHECK(cstring("abcdef").find_last_not_of('f', 0) == 0);
   }
 
-  SECTION("contains") {
+  SUBCASE("contains") {
     const char *aux1 = "cde";
     CHECK(cstring("abcdef").contains(cstring::basic_cstring_view(aux1)));
     CHECK(cstring("abcdef").contains('b'));
@@ -469,7 +469,7 @@ TEST_CASE("cstring") {
     CHECK(!cstring("abcdef").contains("xyz"));
   }
 
-  SECTION("ltrim") {
+  SUBCASE("ltrim") {
     CHECK(cstring("").ltrim() == std::string(""));
     CHECK(cstring(" ").ltrim() == std::string(""));
     CHECK(cstring("  ").ltrim() == std::string(""));
@@ -479,7 +479,7 @@ TEST_CASE("cstring") {
     CHECK(cstring("abc ").ltrim() == std::string("abc "));
   }
 
-  SECTION("rtrim") {
+  SUBCASE("rtrim") {
     CHECK(cstring("").rtrim() == std::string(""));
     CHECK(cstring(" ").rtrim() == std::string(""));
     CHECK(cstring("  ").rtrim() == std::string(""));
@@ -489,7 +489,7 @@ TEST_CASE("cstring") {
     CHECK(cstring(" abc").rtrim() == std::string(" abc"));
   }
 
-  SECTION("trim") {
+  SUBCASE("trim") {
     CHECK(cstring("").trim() == std::string(""));
     CHECK(cstring(" ").trim() == std::string(""));
     CHECK(cstring("  ").trim() == std::string(""));
@@ -500,7 +500,7 @@ TEST_CASE("cstring") {
     CHECK(cstring("  abc  ").trim() == std::string("abc"));
   }
 
-  SECTION("cstring comp cstring") {
+  SUBCASE("cstring comp cstring") {
     CHECK(cstring("abc") == cstring("abc"));
     CHECK(cstring("abc") != cstring("xyz"));
     CHECK(cstring("abc") < cstring("xyz"));
@@ -511,7 +511,7 @@ TEST_CASE("cstring") {
     CHECK(cstring("xyz") >= cstring("abc"));
   }
 
-  SECTION("cstring comp char array") {
+  SUBCASE("cstring comp char array") {
     CHECK(cstring("abc") == "abc");
     CHECK(cstring("abc") != "xyz");
     CHECK(cstring("abc") < "xyz");
@@ -522,7 +522,7 @@ TEST_CASE("cstring") {
     CHECK(cstring("xyz") >= "abc");
   }
 
-  SECTION("char array comp cstring") {
+  SUBCASE("char array comp cstring") {
     CHECK("abc" == cstring("abc"));
     CHECK(!("abc" == cstring("xyz")));
     CHECK("abc" != cstring("xyz"));
@@ -541,7 +541,7 @@ TEST_CASE("cstring") {
     CHECK(!("abc" >= cstring("xyz")));
   }
 
-  SECTION("std::swap") {
+  SUBCASE("std::swap") {
     cstring str1("abc");
     cstring str2("xyz");
     std::swap(str1, str2);
@@ -549,7 +549,7 @@ TEST_CASE("cstring") {
     CHECK(str2 == "abc");
   }
 
-  SECTION("output stream operator") {
+  SUBCASE("output stream operator") {
     std::stringstream ss;
     ss << cstring("abc");
     CHECK(ss.str() == std::string("abc"));
@@ -559,7 +559,7 @@ TEST_CASE("cstring") {
     CHECK(ss.str().empty());
   }
 
-  SECTION("std::hash") {
+  SUBCASE("std::hash") {
     CHECK(std::hash<cstring>{}(cstring()) != 0);
     CHECK(std::hash<cstring>{}(cstring("abc")) != 0);
     CHECK(std::hash<cstring>{}(cstring("abc")) == std::hash<cstring>{}(cstring("abc")));
