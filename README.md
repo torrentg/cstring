@@ -9,12 +9,13 @@ It is a pointer to chars where the pointed memory is prefixed by the ref-counter
 
 Main advantages are :
 
-* Reduce the number of indirections (object mem allocation includes ref-counter)
+* `sizeof(cstring) = 8`
 * Reference counting integrated (forget object ownership)
+* Reduce the number of indirections (allocated memory includes the ref-counter)
 * Includes string length harnessing the full power of `string_view`
-* Easy debug (object pointer points to string content)
+* Easy debug (object points to string content)
 * Mimics the interface of a `const std::string` (eg. `find_first_not_of()`)
-* Possibility to create `static` cstring (lifecicle not subjected to ref-count)
+* Additional utility functions (`contains()`, `trim()`, `ltrim()`, `rtrim()`)
 
 Main drawbacks:
 
@@ -22,6 +23,7 @@ Main drawbacks:
 * 8 additional bytes are allocated (ref-counter + length + eventual padding)
 * No Small String Optimization (SSO)
 * String length and ref-count limited to `4'294'967'295`
+* Stateful allocators (`sizeof(allocator) > 0`) not supported
 
 ## Usage
 

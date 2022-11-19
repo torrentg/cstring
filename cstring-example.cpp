@@ -46,7 +46,8 @@ int main() {
          << "&x2.data = " << static_cast<const void*>(x2.data()) << endl;
     x1 = x2;
   }
-    cout << "&x1 = " << static_cast<const void*>(&x1) << ", "
-         << "x1.data = " << x1 << ", "
-         << "&x1.data = " << static_cast<const void*>(x1.data()) << endl;
+  cout << "&x1 = " << static_cast<const void*>(&x1) << ", "
+       << "x1.data = " << x1 << ", "
+       << "&x1.data = " << static_cast<const void*>(x1.data()) << endl;
+
 }
