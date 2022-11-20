@@ -223,6 +223,11 @@ TEST_CASE("cstring") {
     CHECK(cstring("hello world").compare(6, 5, "world x", 5) == 0);
     CHECK(cstring("hello world").compare(6, 5, "world x", 4) > 0);
     CHECK(cstring("hello world").compare(6, 5, "world x", 6) < 0);
+
+    CHECK(cstring("abc").compare(string_view("abc")) == 0);
+    CHECK(cstring("").compare(string_view("")) == 0);
+    CHECK(cstring("abc").compare(string_view("")) > 0);
+    CHECK(cstring("").compare(string_view("abc")) < 0);
   }
 
   SUBCASE("starts_with") {

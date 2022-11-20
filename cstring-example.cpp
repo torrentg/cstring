@@ -11,12 +11,10 @@ using namespace gto;
 
 int main() {
   cstring str1 = "hello world!";
-  cout << str1 << endl;
+  cout << "str = " << str1 << endl;
   cout << "size = " << str1.size() << endl;
-  auto it = std::find(str1.cbegin(), str1.cend(), 'w');
-  cout << it << endl;
-  auto substr = str1.substr(0, 5);
-  cout << substr << endl;
+  cout << "find('w') = " << std::find(str1.cbegin(), str1.cend(), 'w') << endl;
+  cout << "substr(0, 5) = " << str1.substr(0, 5) << endl;
   cout << (str1.contains('w') ? "" : "not ") << "contains 'w'" << endl;
   cout << (str1.contains("hello") ? "" : "not ") << "contains 'hello'" << endl;
   cout << ("hello world!" == str1 ? "" : "not ") << "equals to 'hello world!'" << endl;
@@ -28,8 +26,8 @@ int main() {
   cout << "last 'll' appears at position " << str1.rfind("ll") << endl;
   cout << "first char in [a-d] appears at position " << str1.find_first_of("abcd") << endl;
   cout << "first char not in [haeiou] appears at position " << str1.find_first_not_of("haeiou") << endl;
-  cout << "last apparison of chars in [aeiou] is at position " << str1.find_last_of("aeiou") << endl;
-  cout << "last apparison of chars not in [orld!] is at position " << str1.find_last_not_of("orld!") << endl;
+  cout << "last occurrence of char in [aeiou] is at position " << str1.find_last_of("aeiou") << endl;
+  cout << "last occurrence of char not in [orld!] is at position " << str1.find_last_not_of("orld!") << endl;
 
   cstring str2 = "   str   ";
   cout << "content = '" << str2 << "'" << endl;

@@ -80,7 +80,7 @@ class basic_cstring
   private: // static members
 
     static allocator_type alloc;
-    static constexpr prefix_type mEmpty[3] = {static_cast<prefix_type>(value_type())};
+    static constexpr prefix_type mEmpty[3] = {0, 0, static_cast<prefix_type>(value_type())};
 
   private: // members
 
@@ -114,14 +114,20 @@ class basic_cstring
       return reinterpret_cast<const_pointer>(ptr + 2);
     }
 
+    //! Returns the allocated array length (of prefix_type values).
+    //! @details It is granted that there is place for the ending '\0'.
+    static size_type getAllocatedLength(size_type len) {
+      return (3 + (len * sizeof(value_type)) / sizeof(prefix_type));
+    }
+
     //! Allocate memory for the counter + length + string + eof. Returns a pointer to string.
     static pointer allocate(size_type len) {
       assert(len > 0);
       assert(len <= std::numeric_limits<prefix_type>::max());
-      std::size_t n = 3 + (len * sizeof(value_type)) / sizeof(prefix_type);
+      size_type n = getAllocatedLength(len);
       prefix_type *ptr = allocator_traits::allocate(alloc, n);
-      allocator_traits::construct(alloc, ptr, 1);
       assert(reinterpret_cast<std::size_t>(ptr) % alignof(prefix_type) == 0);
+      allocator_traits::construct(alloc, ptr, 1);
       ptr[1] = static_cast<prefix_type>(len);
       return const_cast<pointer>(getPtrToString(ptr));
     }
@@ -132,10 +138,13 @@ class basic_cstring
       switch(ptr[0]) {
         case 0: // constant
           break;
-        case 1: // no more references
+        case 1: { // there are no more references
+          prefix_type len = *getPtrToLength(str);
+          size_type n = getAllocatedLength(len);
           allocator_traits::destroy(alloc, ptr);
-          allocator_traits::deallocate(alloc, reinterpret_cast<prefix_type *>(ptr), 1);
+          allocator_traits::deallocate(alloc, reinterpret_cast<prefix_type *>(ptr), n);
           break;
+        }
         default:
           ptr[0]--;
       }
