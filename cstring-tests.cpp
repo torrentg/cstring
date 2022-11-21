@@ -8,11 +8,6 @@
 using namespace std;
 using namespace gto;
 
-// g++ -g --coverage -std=c++17 -Wall -Wextra -Wpedantic -Wconversion -Wsign-conversion test.cpp -I../deps/
-// valgrind --tool=memcheck --leak-check=yes ./a.out
-// lcov -d . --no-external -o coverage.info -c
-// genhtml -o coverage coverage.info
-// firefox coverage/index.html
 TEST_CASE("cstring") {
 
   SUBCASE("sizeof") {

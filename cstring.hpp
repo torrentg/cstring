@@ -34,16 +34,10 @@ namespace gto {
  *   mStr (cstring pointer) points to the string content (to allow view content on debug).
  *   Allocated memory is aligned to ref counter type size.
  *   Allocated memory is a multiple of ref counter type size.
- * @todo
- *   - Validate assumption that sizeof(atomic<uint32_t>) == sizeof(uint32_t)
- *   - Check that processor assumes memory alignment or we need to add __builtin_assume_aligned(a)) or __attribute((aligned(4)))
- *   - Check that std::atomic is enough to grant integrity in a multi-threaded usage
- *   - Explore cache invalidation impact on multi-threaded code
- *   - Performance tests
  * @see https://en.cppreference.com/w/cpp/string/basic_string
  * @see https://github.com/torrentg/cstring
  * @note This class is immutable.
- * @version 0.9.0
+ * @version 1.0.0
  */
 template<typename Char,
          typename Traits = std::char_traits<Char>,
@@ -91,7 +85,7 @@ class basic_cstring
 
     //! Sanitize a char array pointer avoiding nulls.
     static inline constexpr const_pointer sanitize(const_pointer str) {
-      return (str == nullptr ? getPtrToString(mEmpty) : str);
+      return ((str == nullptr || str[0] == value_type()) ? getPtrToString(mEmpty) : str);
     }
 
     //! Return pointer to counter from pointer to string.
@@ -135,18 +129,19 @@ class basic_cstring
     //! Deallocate string memory if no more references.
     static void deallocate(const_pointer str) {
       atomic_prefix_type *ptr = getPtrToCounter(str);
-      switch(ptr[0]) {
-        case 0: // constant
-          break;
-        case 1: { // there are no more references
-          prefix_type len = *getPtrToLength(str);
-          size_type n = getAllocatedLength(len);
-          allocator_traits::destroy(alloc, ptr);
-          allocator_traits::deallocate(alloc, reinterpret_cast<prefix_type *>(ptr), n);
-          break;
-        }
-        default:
-          ptr[0]--;
+      prefix_type counts = ptr[0];
+
+      if (counts == 0) { // constant
+        return;
+      } else if (counts > 1) {
+        counts = ptr[0]--;
+      }
+
+      if (counts == 1) {
+        prefix_type len = *getPtrToLength(str);
+        size_type n = getAllocatedLength(len);
+        allocator_traits::destroy(alloc, ptr);
+        allocator_traits::deallocate(alloc, reinterpret_cast<prefix_type *>(ptr), n);
       }
     }
 

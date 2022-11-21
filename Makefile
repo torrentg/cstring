@@ -7,7 +7,7 @@ example: cstring-example.cpp
 	./cstring-example
 
 tests: cstring-tests.cpp
-	$(CXX) -g $(CXXFLAGS) -o cstring-tests cstring-tests.cpp
+	$(CXX) -fsanitize=address -g $(CXXFLAGS) -o cstring-tests cstring-tests.cpp
 	./cstring-tests
 
 coverage: cstring-tests.cpp

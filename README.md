@@ -4,18 +4,17 @@
 
 cstring is a C++ immutable C-string (aka const char array) with reference counting.
 
-It is a pointer to chars where the pointed memory is prefixed by the ref-counter 
+It is a pointer to chars where the pointed memory is prefixed by the ref-counter
 (4-bytes) and the string length (4-bytes).
 
-Main advantages are :
+Features: :
 
-* `sizeof(cstring) = 8`
-* Reference counting integrated (forget object ownership)
-* Reduce the number of indirections (allocated memory includes the ref-counter)
+* It is a `const char *` having `sizeof(cstring) = 8`
+* Behaves like a `std::string`
+* Reference counting integrated reduce the number of indirections
 * Includes string length harnessing the full power of `string_view`
 * Easy debug (object points to string content)
-* Mimics the interface of a `const std::string` (eg. `find_first_not_of()`)
-* Additional utility functions (`contains()`, `trim()`, `ltrim()`, `rtrim()`)
+* Additional utility functions (`contains()`, `trim()`, etc)
 
 Main drawbacks:
 
