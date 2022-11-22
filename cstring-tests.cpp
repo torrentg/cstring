@@ -81,6 +81,9 @@ TEST_CASE("cstring") {
       cstring str2(std::move(str1));
       CHECK(str2.data() == ptr);
     }
+    {
+      CHECK_THROWS(cstring("abc", std::numeric_limits<std::size_t>::max()));
+    }
   }
 
   SUBCASE("assignment") {
@@ -99,6 +102,12 @@ TEST_CASE("cstring") {
       str1 = str2;
       CHECK(str1.data() == str2.data());
       CHECK(str1.data() == string(""));
+    }
+    {
+      cstring str("abc");
+      auto ptr = str.data();
+      str = str;
+      CHECK(str.data() == ptr);
     }
   }
 
