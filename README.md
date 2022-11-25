@@ -1,8 +1,6 @@
 # cstring
 
-**This project is under development.**
-
-cstring is a C++ immutable C-string (aka const char array) with reference counting.
+cstring is a C++ immutable C-string (aka `const char array`) with reference counting.
 
 It is a pointer to chars where the pointed memory is prefixed by the ref-counter
 (4-bytes) and the string length (4-bytes).
@@ -52,9 +50,12 @@ make coverage
 firefox coverage/index.html &
 ```
 
-## Authors
+## Contributors
 
-* **Gerard Torrent** - _Initial work_ - [torrentg](https://github.com/torrentg/)
+| Name | Contribution |
+|:-----|:-------------|
+| [Gerard Torrent](https://github.com/torrentg/) | Initial work<br/>Code maintainer|
+| [Matthieu M.](https://codereview.stackexchange.com/users/8999/matthieu-m) | [Code review](https://codereview.stackexchange.com/questions/281365/an-immutable-c-string-with-ref-counting) |
 
 ## License
 

@@ -20,7 +20,7 @@ namespace gto {
  *   - Automatic mem dealloc (when no refs point to content).
  *   - Same sizeof than a 'char *'.
  *   - Null not allowed (equals to empty string).
- *   - Empty string don't require alloc.
+ *   - Empty string don't require memory allocation.
  *   - String content available on debug.
  *   - Mimics the STL basic_string class.
  * @details Memory layout:
@@ -48,18 +48,15 @@ class basic_cstring
 
     using prefix_type = std::uint32_t;
     using atomic_prefix_type = std::atomic<prefix_type>;
-
     using pointer = typename std::allocator_traits<Allocator>::pointer;
 
   public: // declarations
 
     using allocator_type = typename std::allocator_traits<Allocator>::template rebind_alloc<prefix_type>;
     using allocator_traits = std::allocator_traits<allocator_type>;
-
     using traits_type = Traits;
     using size_type = typename std::allocator_traits<Allocator>::size_type;
     using difference_type = typename std::allocator_traits<Allocator>::difference_type;
-
     using value_type = Char;
     using const_reference = const value_type &;
     using const_pointer = typename std::allocator_traits<Allocator>::const_pointer;
@@ -69,6 +66,7 @@ class basic_cstring
 
   public: // static members
 
+    // Special value indicating the maximum achievable index + 1.
     static constexpr size_type npos = std::numeric_limits<size_type>::max();
 
     //! Returns the maximum number of elements the string is able to hold.
@@ -84,7 +82,7 @@ class basic_cstring
       value_type str[2] = {value_type(), value_type()};
     };
 
-    static allocator_type alloc;
+    static allocator_type mAllocator;
     static constexpr EmptyCString mEmpty{};
 
   private: // members
@@ -95,12 +93,12 @@ class basic_cstring
   private: // static methods
 
     //! Sanitize a char array pointer avoiding nulls.
-    static inline constexpr const_pointer sanitize(const_pointer str) {
+    static inline constexpr const_pointer sanitize(const_pointer str) noexcept {
       return ((str == nullptr || str[0] == value_type()) ? mEmpty.str : str);
     }
 
     //! Return pointer to counter from pointer to string.
-    static inline constexpr atomic_prefix_type * getPtrToCounter(const_pointer str) {
+    static inline constexpr atomic_prefix_type * getPtrToCounter(const_pointer str) noexcept {
       static_assert(sizeof(atomic_prefix_type) == sizeof(prefix_type));
       static_assert(sizeof(value_type) <= sizeof(prefix_type));
       assert(str != nullptr);
@@ -109,7 +107,7 @@ class basic_cstring
     }
 
     //! Return pointer to string length from pointer to string.
-    static inline constexpr prefix_type * getPtrToLength(const_pointer str) {
+    static inline constexpr prefix_type * getPtrToLength(const_pointer str) noexcept {
       static_assert(sizeof(value_type) <= sizeof(prefix_type));
       assert(str != nullptr);
       pointer ptr = const_cast<pointer>(str) - (sizeof(prefix_type) / sizeof(value_type));
@@ -117,55 +115,86 @@ class basic_cstring
     }
 
     //! Return pointer to string from pointer to counter.
-    static inline constexpr const_pointer getPtrToString(const prefix_type *ptr) {
+    static inline constexpr const_pointer getPtrToString(const prefix_type *ptr) noexcept {
       static_assert(sizeof(atomic_prefix_type) == sizeof(prefix_type));
       assert(ptr != nullptr);
       return reinterpret_cast<const_pointer>(ptr + 2);
     }
 
-    //! Returns the allocated array length (of prefix_type values).
-    //! @details It is granted that there is place for the ending NULL.
-    static size_type getAllocatedLength(size_type len) {
-      return (3 + (len * sizeof(value_type)) / sizeof(prefix_type));
+    /** 
+     * Returns the length of the prefix_type array to allocate.
+     * @details Allocator allocates an array of prefix_type (not Char) to grant the memory alignment.
+     * @details The returned length considere the place for the ending NUL.
+     * @example Let len=6, sizeof(Char)=2, sizeof(prefix_type)=4
+     *    We need to reserve:
+     *      - 4-bytes for the counter (uint32_t)
+     *      - 4-bytes for the length (uint32_t)
+     *      - 6 x 2-bytes = 12-bytes for the string content
+     *      - 1 x 2-bytes = 2-bytes for the terminating NUL
+     *    Total to reserve = 22-bytes
+     *    Expresed in 4-bytes (uint32_t) units = 6 (upper rounding)
+     *    In this case there are 2 ending bytes acting as padding.
+     * @param[in] len Length of the string (without ending NUL).
+     * @return Length of the prefix_type array.
+     */
+    static size_type getAllocatedLength(size_type len) noexcept {
+      static_assert(sizeof(value_type) <= sizeof(prefix_type));
+      return 3 + (len * sizeof(value_type)) / sizeof(prefix_type);
     }
 
-    //! Allocate memory for the counter + length + string + eof. Returns a pointer to string.
-    static pointer allocate(size_type len) {
+    /** 
+     * Allocate memory for the ref-counter + length + string + NUL.
+     * @details We allocate prefix_types to grant memory alignment.
+     * @param[in] len Length to reserve (of prefix_types).
+     * @return A pointer to the allocated memory.
+     */
+    [[nodiscard]] 
+    static prefix_type * allocate(size_type len) {
       static_assert(sizeof(atomic_prefix_type) == sizeof(prefix_type));
       static_assert(alignof(value_type) <= alignof(prefix_type));
       static_assert(sizeof(value_type) <= sizeof(prefix_type));
-      assert(len > 0 && len <= max_size());
-      size_type n = getAllocatedLength(len);
-      prefix_type *ptr = allocator_traits::allocate(alloc, n);
+      assert(len > 0);
+      prefix_type *ptr = allocator_traits::allocate(mAllocator, len);
       assert(reinterpret_cast<std::size_t>(ptr) % alignof(prefix_type) == 0);
-      allocator_traits::construct(alloc, ptr, 1);
-      ptr[1] = static_cast<prefix_type>(len);
-      return const_cast<pointer>(getPtrToString(ptr));
+      return ptr;
     }
 
-    //! Deallocate string memory if no more references.
-    static void deallocate(const_pointer str) {
+    //! Deallocates the memory allocated by the object.
+    static void deallocate(const_pointer str) noexcept {
+      assert(str != nullptr);
+      assert(str != mEmpty.str);
+      atomic_prefix_type *ptr = getPtrToCounter(str);
+      prefix_type len = *getPtrToLength(str);
+      size_type n = getAllocatedLength(len);
+      ptr->~atomic_prefix_type();
+      allocator_traits::deallocate(mAllocator, reinterpret_cast<prefix_type *>(ptr), n);
+    }
+
+    /**
+     * Decrements the ref-counter.
+     * If no more references then deallocate the memory.
+     * The empty string is never deallocated.
+     * @param[in] str Memory to release.
+     */
+    static void release(const_pointer str) noexcept {
       atomic_prefix_type *ptr = getPtrToCounter(str);
       prefix_type counts = ptr[0].load(std::memory_order_relaxed);
 
       if (counts == 0) { // constant (eg. mEmpty)
         return;
-      } 
+      }
       
       if (counts > 1) {
         counts = ptr[0].fetch_sub(1, std::memory_order_relaxed);
       }
 
       if (counts == 1) {
-        prefix_type len = *getPtrToLength(str);
-        size_type n = getAllocatedLength(len);
-        allocator_traits::destroy(alloc, ptr);
-        allocator_traits::deallocate(alloc, reinterpret_cast<prefix_type *>(ptr), n);
+        deallocate(str);
       }
     }
 
     //! Increment the reference counter (except for constants).
-    static void incrementRefCounter(const_pointer str) {
+    static void incrementRefCounter(const_pointer str) noexcept {
       atomic_prefix_type *ptr = getPtrToCounter(str);
       if (ptr[0].load(std::memory_order_relaxed) > 0) {
         ptr[0].fetch_add(1, std::memory_order_relaxed);
@@ -174,25 +203,45 @@ class basic_cstring
 
   public: // methods
 
-    //! Default constructor.
-    basic_cstring() : basic_cstring(nullptr) {}
-    //! Constructor.
+    /**
+     * Constructs a default cstring (empty string).
+     */
+    basic_cstring() noexcept : basic_cstring(nullptr) {}
+    /** 
+     * Constructs a cstring with a copy of the null-terminated str.
+     * The length is determined by the first null character.
+     * str nullptr creates an emptry string.
+     */
     basic_cstring(const_pointer str) : basic_cstring(str, (str == nullptr ? 0 : traits_type::length(str))) {}
-    //! Constructor.
+    /** 
+     * Constructs a cstring with the first len characters pointed by str.
+     * A terminating NUL character will be added.
+     * str can contain null characters.
+     * str = nullptr creates an empty string.
+     * len = 0 creates an empty string.
+     */
     basic_cstring(const_pointer str, size_type len) {
       if (len > max_size()) {
         throw std::length_error("invalid cstring length");
       } else if (str == nullptr || len == 0) {
         mStr = mEmpty.str;
       } else {
-        pointer content = allocate(len);
+        size_type n = getAllocatedLength(len);
+        prefix_type *ptr = allocate(n);
+        std::atomic_init(reinterpret_cast<atomic_prefix_type*>(ptr), 1); // ref-counter = 1
+        ptr[1] = static_cast<prefix_type>(len); // length
+        pointer content = reinterpret_cast<pointer>(ptr + 2);
         traits_type::copy(content, str, len);
         content[len] = value_type();
         mStr = content;
       }
     }
-    //! Destructor.
-    ~basic_cstring() { deallocate(mStr); }
+    /**
+     * Destructor.
+     * Decrements the ref-counter if other instances exists.
+     * Otherwise deallocates memory.
+     */
+    ~basic_cstring() { release(mStr); }
 
     //! Copy constructor.
     basic_cstring(const basic_cstring &other) noexcept : mStr(other.mStr) { incrementRefCounter(mStr); }
@@ -200,11 +249,11 @@ class basic_cstring
     basic_cstring(basic_cstring &&other) noexcept : mStr(std::exchange(other.mStr, mEmpty.str)) {}
 
     //! Copy assignment.
-    basic_cstring & operator=(const basic_cstring &other) { 
+    basic_cstring & operator=(const basic_cstring &other) noexcept { 
       if (mStr == other.mStr) {
         return *this;
       }
-      deallocate(mStr);
+      release(mStr);
       mStr = other.mStr;
       incrementRefCounter(mStr);
       return *this;
@@ -219,10 +268,10 @@ class basic_cstring
     //! Test if string is empty.
     bool empty() const noexcept { return (length() == 0); }
 
-    //! Get character of string.
-    const_reference operator[](size_type pos) const { return mStr[pos]; }
-    //! Get character of string checking for out_of_range.
-    const_reference at(size_type pos) const { return (empty() || pos >= length() ? throw std::out_of_range("cstring::at") : mStr[pos]); }
+    //! Returns a reference to the character at specified location pos in range [0, length()].
+    const_reference operator[](size_type pos) const noexcept { return mStr[pos]; }
+    //! Returns a reference to the character at specified location pos in range [0, length()].
+    const_reference at(size_type pos) const { return (pos > length() ? throw std::out_of_range("cstring::at") : mStr[pos]); }
     //! Get last character of the string.
     const_reference back() const { return (empty() ? throw std::out_of_range("cstring::back") : mStr[length()-1]); }
     //! Get first character of the string.
@@ -233,7 +282,7 @@ class basic_cstring
     //! Returns a non-null pointer to a null-terminated character array.
     inline const_pointer c_str() const noexcept { return data(); }
     //! Returns a string_view of content.
-    inline basic_cstring_view view() const { return basic_cstring_view(mStr, length()); }
+    inline basic_cstring_view view() const noexcept { return basic_cstring_view(mStr, length()); }
 
     // Const iterator to the begin.
     const_iterator cbegin() const noexcept { return view().cbegin(); }
@@ -421,11 +470,11 @@ class basic_cstring
       return basic_cstring_view(ptr1, static_cast<size_type>(ptr2 - ptr1));
     }
 
-}; // namespace gto
+}; // class basic_cstring
 
 //! Static variable declaration
 template<typename Char, typename Traits, typename Allocator>
-typename gto::basic_cstring<Char, Traits, Allocator>::allocator_type gto::basic_cstring<Char, Traits, Allocator>::alloc{};
+typename gto::basic_cstring<Char, Traits, Allocator>::allocator_type gto::basic_cstring<Char, Traits, Allocator>::mAllocator{};
 
 //! Comparison operators (between basic_cstring)
 template<typename Char, typename Traits, typename Allocator>
@@ -505,6 +554,18 @@ inline bool operator>=(const Char *lhs, const basic_cstring<Char,Traits,Allocato
   return (rhs.compare(lhs) <= 0);
 }
 
+//! Overloading the std::swap algorithm for std::basic_cstring.
+template<typename Char, typename Traits, typename Allocator>
+inline void swap(gto::basic_cstring<Char,Traits,Allocator> &lhs, gto::basic_cstring<Char,Traits,Allocator> &rhs) noexcept {
+  lhs.swap(rhs);
+}
+
+//! Performs stream output on basic_cstring.
+template<typename Char, typename Traits, typename Allocator>
+inline std::basic_ostream<Char,Traits> & operator<<(std::basic_ostream<Char,Traits> &os, const gto::basic_cstring<Char,Traits,Allocator> &str) {
+  return operator<<(os, str.view());
+}
+
 // template incarnations
 typedef basic_cstring<char> cstring;
 typedef basic_cstring<wchar_t> wcstring;
@@ -513,34 +574,18 @@ typedef basic_cstring<wchar_t>::basic_cstring_view wcstring_view;
 
 } // namespace gto
 
-namespace std {
-
-//! Specializes the std::swap algorithm for std::basic_cstring.
-template<typename Char, typename Traits, typename Allocator>
-inline void swap(gto::basic_cstring<Char,Traits,Allocator> &lhs, gto::basic_cstring<Char,Traits,Allocator> &rhs) noexcept {
-  lhs.swap(rhs);
-}
-
-//! Performs stream output on basic_cstring.
-template<typename Char, typename Traits, typename Allocator>
-inline basic_ostream<Char,Traits> & operator<<(std::basic_ostream<Char,Traits> &os, const gto::basic_cstring<Char,Traits,Allocator> &str) {
-  return operator<<(os, str.view());
-}
-
 //! The template specializations of std::hash for gto::cstring.
 template<>
-struct hash<gto::cstring> {
+struct std::hash<gto::cstring> {
   std::size_t operator()(const gto::cstring &str) const {
-    return hash<std::string_view>()(str.view());
+    return std::hash<std::string_view>()(str.view());
   }
 };
 
 //! The template specializations of std::hash for gto::wcstring.
 template<>
-struct hash<gto::wcstring> {
+struct std::hash<gto::wcstring> {
   std::size_t operator()(const gto::wcstring &str) const {
-    return hash<std::wstring_view>()(str.view());
+    return std::hash<std::wstring_view>()(str.view());
   }
 };
-
-} // namespace std
