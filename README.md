@@ -26,7 +26,7 @@ Main drawbacks:
 
 Drop off [`cstring.hpp`](cstring.hpp) in your project and start using the cstring.
 
-Read [`example.cpp`](example.cpp) file to see how to use it.
+Read [`cstring-example.cpp`](cstring-example.cpp) file to see how to use it.
 
 ```c++
 #include "cstring.hpp"

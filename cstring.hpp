@@ -37,7 +37,7 @@ namespace gto {
  * @see https://en.cppreference.com/w/cpp/string/basic_string
  * @see https://github.com/torrentg/cstring
  * @note This class is immutable.
- * @version 1.0.0
+ * @version 1.0.1
  */
 template<typename Char,
          typename Traits = std::char_traits<Char>,
@@ -223,7 +223,8 @@ class basic_cstring
     basic_cstring(const_pointer str, size_type len) {
       if (len > max_size()) {
         throw std::length_error("invalid cstring length");
-      } else if (str == nullptr || len == 0) {
+      } 
+      if (str == nullptr || len == 0) {
         mStr = mEmpty.str;
       } else {
         size_type n = getAllocatedLength(len);
