@@ -146,6 +146,13 @@ TEST_CASE("cstring") {
     CHECK(str2.data() == string("abc"));
   }
 
+  SUBCASE("conversion") {
+    cstring str("abc");
+    CHECK(::strlen(str) == 3);
+    CHECK(::strlen(cstring{}) == 0);
+    CHECK(::strlen(cstring("abc")) == 3);
+  }
+
   SUBCASE("empty") {
     CHECK(!cstring("abc").empty());
     CHECK(cstring("").empty());

@@ -262,6 +262,9 @@ class basic_cstring
     //! Move assignment.
     basic_cstring & operator=(basic_cstring &&other) noexcept { std::swap(mStr, other.mStr); return *this; }
 
+    //! Conversion to 'const char *'
+    operator const_pointer() const { return mStr; }
+
     //! Return length of string.
     size_type size() const noexcept { return *(getPtrToLength(mStr)); }
     //! Return length of string.
