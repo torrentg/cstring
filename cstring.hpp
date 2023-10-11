@@ -37,7 +37,7 @@ namespace gto {
  * @see https://en.cppreference.com/w/cpp/string/basic_string
  * @see https://github.com/torrentg/cstring
  * @note This class is immutable.
- * @version 1.0.1
+ * @version 1.0.2
  */
 template<typename Char,
          typename Traits = std::char_traits<Char>,
