@@ -43,7 +43,7 @@ namespace gto {
  * @see https://github.com/torrentg/cstring
  * 
  * @note This class is immutable.
- * @version 1.0.4
+ * @version 1.0.3
  */
 template<typename Char,
          typename Traits = std::char_traits<Char>,
