@@ -3,7 +3,7 @@ CXXFLAGS= -std=c++17 -Wall -Wextra -Wpedantic -Wconversion -Wsign-conversion -Wn
 all: example tests coverage
 
 example: cstring-example.cpp
-	$(CXX) -O2 $(CXXFLAGS) -o cstring-example cstring-example.cpp
+	$(CXX) -O2 -DNDEBUG $(CXXFLAGS) -o cstring-example cstring-example.cpp
 	./cstring-example
 
 tests: cstring-tests.cpp
@@ -20,8 +20,8 @@ coverage: cstring-tests.cpp
 	genhtml -o coverage coverage/coverage.info
 
 static-analysis: cstring.hpp
-	cppcheck --enable=all --inconclusive --suppress=unusedFunction --suppress=passedByValue --suppress=noExplicitConstructor --suppress=missingIncludeSystem cstring.hpp
-	clang-tidy cstring.hpp -checks='-*,readability-*,-readability-redundant-access-specifiers,-readability-identifier-length,-readability-braces-around-statements,performance-*,portability-*,misc-*,clang-analyzer-*,bugprone-*,-clang-diagnostic-error' -extra-arg=-std=c++20
+	cppcheck --enable=all --inconclusive --suppress=unusedFunction --suppress=noExplicitConstructor --suppress=missingIncludeSystem cstring.hpp
+	clang-tidy cstring.hpp -checks='-*,readability-*,-readability-redundant-access-specifiers,-readability-identifier-length,-readability-braces-around-statements,-readability-math-missing-parentheses,performance-*,portability-*,misc-*,clang-analyzer-*,bugprone-*,-clang-diagnostic-error' -extra-arg=-std=c++20
 
 clean: 
 	rm -f cstring-tests

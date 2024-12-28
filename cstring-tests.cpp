@@ -8,12 +8,6 @@
 using namespace std;
 using namespace gto;
 
-template<typename C, typename T, typename A>
-uint32_t getCounter(basic_cstring<C, T, A> &x) {
-  const uint32_t *ptr = reinterpret_cast<const uint32_t *>(x.data());
-  return ptr[-2];
-}
-
 TEST_CASE("cstring") {
 
   SUBCASE("sizeof") {
@@ -24,7 +18,7 @@ TEST_CASE("cstring") {
     cstring empty1;
     CHECK(empty1.size() == 0);
     CHECK(empty1.length() == 0);
-    CHECK(getCounter(empty1) == 0);
+    CHECK(empty1.use_count() == 0);
     CHECK(std::strlen(empty1.data()) == 0);
     {
       cstring empty2(nullptr);
@@ -65,7 +59,7 @@ TEST_CASE("cstring") {
       cstring str("abc");
       CHECK(str.size() == 3);
       CHECK(str.length() == 3);
-      CHECK(getCounter(str) == 1);
+      CHECK(str.use_count() == 1);
       CHECK(string("abc") == str.data());
     }
     {
@@ -75,26 +69,26 @@ TEST_CASE("cstring") {
     }
     {
       cstring str1("abc");
-      CHECK(getCounter(str1) == 1);
+      CHECK(str1.use_count() == 1);
       cstring str2(str1);
-      CHECK(getCounter(str1) == 2);
-      CHECK(getCounter(str2) == 2);
+      CHECK(str1.use_count() == 2);
+      CHECK(str2.use_count() == 2);
       CHECK(str1.data() == str2.data());
     }
     {
       cstring str1("abc");
-      CHECK(getCounter(str1) == 1);
+      CHECK(str1.use_count() == 1);
       cstring str2 = str1;
-      CHECK(getCounter(str1) == 2);
-      CHECK(getCounter(str2) == 2);
+      CHECK(str1.use_count() == 2);
+      CHECK(str2.use_count() == 2);
       CHECK(str1.data() == str2.data());
     }
     {
       cstring str1("abc");
       const char *ptr = str1.data();
-      CHECK(getCounter(str1) == 1);
+      CHECK(str1.use_count() == 1);
       cstring str2(std::move(str1));
-      CHECK(getCounter(str2) == 1);
+      CHECK(str2.use_count() == 1);
       CHECK(str2.data() == ptr);
     }
     {
@@ -106,32 +100,32 @@ TEST_CASE("cstring") {
     {
       cstring str1("abc");
       cstring str2("xyz");
-      CHECK(getCounter(str1) == 1);
-      CHECK(getCounter(str2) == 1);
+      CHECK(str1.use_count() == 1);
+      CHECK(str2.use_count() == 1);
       CHECK(str1.data() != str2.data());
       str1 = str2;
-      CHECK(getCounter(str1) == 2);
+      CHECK(str1.use_count() == 2);
       CHECK(str1.data() == str2.data());
       CHECK(str1.data() == string("xyz"));
     }
     {
       cstring str1("abc");
       cstring str2;
-      CHECK(getCounter(str1) == 1);
-      CHECK(getCounter(str2) == 0);
+      CHECK(str1.use_count() == 1);
+      CHECK(str2.use_count() == 0);
       CHECK(str1.data() != str2.data());
       str1 = str2;
-      CHECK(getCounter(str1) == 0);
-      CHECK(getCounter(str2) == 0);
+      CHECK(str1.use_count() == 0);
+      CHECK(str2.use_count() == 0);
       CHECK(str1.data() == str2.data());
       CHECK(str1.data() == string(""));
     }
     {
       cstring str("abc");
-      CHECK(getCounter(str) == 1);
+      CHECK(str.use_count() == 1);
       auto ptr = str.data();
       str = str;
-      CHECK(getCounter(str) == 1);
+      CHECK(str.use_count() == 1);
       CHECK(str.data() == ptr);
     }
   }
@@ -144,6 +138,17 @@ TEST_CASE("cstring") {
     CHECK(str1.data() != str2.data());
     CHECK(str1.data() == string("xyz"));
     CHECK(str2.data() == string("abc"));
+  }
+
+  SUBCASE("use_count") {
+    cstring str1 = "abc";
+    CHECK(str1.use_count() == 1);
+    {
+      cstring str2 = str1;
+      CHECK(str1.use_count() == 2);
+      CHECK(str2.use_count() == 2);
+    }
+    CHECK(str1.use_count() == 1);
   }
 
   SUBCASE("conversion") {
@@ -633,16 +638,16 @@ TEST_CASE("wcstring") {
     wcstring str1{L"SomeText"};
     CHECK(str1.length() == 8);
     CHECK(str1.size() == 8);
-    CHECK(getCounter(str1) == 1);
+    CHECK(str1.use_count() == 1);
 
     wcstring str2{L"čřžýáí1"};
     CHECK(str2.length() == 7);
     CHECK(str2.size() == 7);
-    CHECK(getCounter(str2) == 1);
+    CHECK(str2.use_count() == 1);
 
     CHECK(str1 != str2);
     str1 = str2;
-    CHECK(getCounter(str2) == 2);
+    CHECK(str2.use_count() == 2);
     CHECK(str1 == str2);
 
     CHECK(std::hash<wcstring>{}(wcstring()) != 0);
@@ -663,16 +668,16 @@ TEST_CASE("cstring16") {
     cstring16 str1{u"test"};
     CHECK(str1.length() == 4);
     CHECK(str1.size() == 4);
-    CHECK(getCounter(str1) == 1);
+    CHECK(str1.use_count() == 1);
 
     cstring16 str2{u"world"};
     CHECK(str2.length() == 5);
     CHECK(str2.size() == 5);
-    CHECK(getCounter(str2) == 1);
+    CHECK(str2.use_count() == 1);
 
     CHECK(str1 != str2);
     str1 = str2;
-    CHECK(getCounter(str2) == 2);
+    CHECK(str2.use_count() == 2);
     CHECK(str1 == str2);
   }
 
