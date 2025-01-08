@@ -43,7 +43,7 @@ namespace gto {
  * @see https://github.com/torrentg/cstring
  * 
  * @note This class is immutable.
- * @version 1.0.3
+ * @version 1.0.4
  */
 template<typename Char,
          typename Traits = std::char_traits<Char>,
@@ -375,7 +375,7 @@ class basic_cstring
     }
     bool starts_with(const basic_cstring_view sv) const noexcept {
         auto len = sv.length();
-        return (compare(0, len, sv.data()) == 0);
+        return (compare(0, len, sv.data(), len) == 0);
     }
     bool starts_with(const_pointer str) const noexcept {
         return starts_with(basic_cstring_view(sanitize(str)));
@@ -390,7 +390,7 @@ class basic_cstring
     bool ends_with(const basic_cstring_view sv) const noexcept {
         size_type len1 = length();
         size_type len2 = sv.length();
-        return (len1 >= len2 && compare(len1-len2, len2, sv.data()) == 0);
+        return (len1 >= len2 && compare(len1-len2, len2, sv.data(), len2) == 0);
     }
     bool ends_with(const_pointer str) const noexcept {
         return ends_with(basic_cstring_view(sanitize(str)));

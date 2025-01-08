@@ -290,8 +290,10 @@ TEST_CASE("cstring") {
     CHECK(!cstring("hello world").starts_with(cstring("ello")));
 
     const char *aux = "hello";
+    CHECK(cstring("hello world").starts_with(""sv));
     CHECK(cstring("hello world").starts_with(cstring::basic_cstring_view(aux)));
-    CHECK(!cstring("hello world").starts_with(cstring::basic_cstring_view(aux, 1)));
+    CHECK(cstring("hello world").starts_with(cstring::basic_cstring_view(aux, 1)));
+    CHECK(!cstring("hello world").starts_with("hellow world!"sv));
 
     CHECK(cstring("hello world").starts_with(nullptr));
     CHECK(cstring("hello world").starts_with(""));
@@ -304,8 +306,10 @@ TEST_CASE("cstring") {
     CHECK(!cstring("hello world").ends_with(cstring("worlds")));
 
     const char *aux = "world";
+    CHECK(cstring("hello world").ends_with(""sv));
     CHECK(cstring("hello world").ends_with(cstring::basic_cstring_view(aux)));
     CHECK(!cstring("hello world").ends_with(cstring::basic_cstring_view(aux, 4)));
+    CHECK(!cstring("hello world").ends_with("a hello world"sv));
 
     CHECK(cstring("hello world").ends_with(nullptr));
     CHECK(cstring("hello world").ends_with(""));
