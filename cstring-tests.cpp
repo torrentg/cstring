@@ -1,5 +1,6 @@
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 
+#include <map>
 #include <sstream>
 #include <cstring>
 #include "doctest.h"
@@ -683,6 +684,26 @@ TEST_CASE("cstring16") {
     str1 = str2;
     CHECK(str2.use_count() == 2);
     CHECK(str1 == str2);
+  }
+
+}
+
+TEST_CASE("cstring_compare") {
+
+  SUBCASE("general") {
+
+    std::map<cstring, int, cstring_compare> cstring_map;
+    cstring_map[cstring("apple")] = 1;
+    cstring_map[cstring("banana")] = 2;
+
+    CHECK(cstring_map.size() == 2);
+
+    CHECK(cstring_map.find(cstring("apple")) != cstring_map.end());
+    CHECK(cstring_map.find(static_cast<const char *>("apple")) != cstring_map.end());
+    CHECK(cstring_map.find(std::string("banana")) != cstring_map.end());
+    CHECK(cstring_map.find(std::string_view("banana")) != cstring_map.end());
+
+    CHECK(cstring_map.begin()->first == cstring("apple"));
   }
 
 }

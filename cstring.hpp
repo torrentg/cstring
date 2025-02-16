@@ -43,7 +43,7 @@ namespace gto {
  * @see https://github.com/torrentg/cstring
  * 
  * @note This class is immutable.
- * @version 1.0.4
+ * @version 1.0.5
  */
 template<typename Char,
          typename Traits = std::char_traits<Char>,
@@ -615,11 +615,49 @@ inline std::basic_ostream<Char,Traits> & operator<<(std::basic_ostream<Char,Trai
     return operator<<(os, str.view());
 }
 
-// template incarnations
-typedef basic_cstring<char> cstring;
-typedef basic_cstring<wchar_t> wcstring;
-typedef basic_cstring<char>::basic_cstring_view cstring_view;
-typedef basic_cstring<wchar_t>::basic_cstring_view wcstring_view;
+//! Utility class to compare basic_cstring to other types.
+template<typename Char,
+         typename Traits = std::char_traits<Char>,
+         typename Allocator = std::allocator<Char>>
+struct basic_cstring_compare
+{
+    using is_transparent = std::true_type;
+
+    // basic_cstring vs basic_cstring
+    bool operator()(const basic_cstring<Char, Traits, Allocator>& lhs, const basic_cstring<Char, Traits, Allocator>& rhs) const noexcept {
+        return lhs.compare(rhs) < 0;
+    }
+
+    // basic_cstring vs const Char *
+    bool operator()(const basic_cstring<Char, Traits, Allocator>& lhs, const Char* rhs) const noexcept {
+        return lhs.compare(rhs) < 0;
+    }
+    bool operator()(const Char* lhs, const basic_cstring<Char, Traits, Allocator>& rhs) const noexcept {
+        return rhs.compare(lhs) > 0;
+    }
+
+    // basic_cstring vs std::basic:string
+    bool operator()(const basic_cstring<Char, Traits, Allocator>& lhs, const std::basic_string<Char, Traits, Allocator>& rhs) const noexcept {
+        return lhs.compare(rhs.c_str()) < 0;
+    }
+    bool operator()(const std::basic_string<Char, Traits, Allocator>& lhs, const basic_cstring<Char, Traits, Allocator>& rhs) const noexcept {
+        return rhs.compare(lhs.c_str()) > 0;
+    }
+
+    // basic_cstring vs std::basic:string_view
+    bool operator()(const basic_cstring<Char, Traits, Allocator>& lhs, const std::basic_string_view<Char, Traits>& rhs) const noexcept {
+        return lhs.compare(rhs.data()) < 0;
+    }
+    bool operator()(const std::basic_string_view<Char, Traits>& lhs, const basic_cstring<Char, Traits, Allocator>& rhs) const noexcept {
+        return rhs.compare(lhs.data()) > 0;
+    }
+};
+
+// templates incarnations
+using cstring = basic_cstring<char>;
+using wcstring = basic_cstring<wchar_t> ;
+using cstring_compare = basic_cstring_compare<char>;
+using wcstring_compare = basic_cstring_compare<wchar_t>;
 
 } // namespace gto
 

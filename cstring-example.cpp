@@ -1,3 +1,4 @@
+#include <map>
 #include <iostream>
 #include <algorithm>
 #include "cstring.hpp"
@@ -54,4 +55,12 @@ int main()
     cout << "&x1 = " << static_cast<const void*>(&x1) << ", "
          << "x1.data = " << x1 << ", "
          << "&x1.data = " << static_cast<const void*>(x1.data()) << endl;
+
+    std::map<cstring, int, cstring_compare> cstring_map;
+    cstring_map[cstring("apple")] = 1;
+    cstring_map[cstring("banana")] = 2;
+
+    // searching a value in the map using a distinct type
+    cout << "find(\"apple\") = " << cstring_map.find(static_cast<const char *>("apple"))->second << endl;
+    cout << "find(std::string(\"banana\")) = " << cstring_map.find(std::string("banana"))->second << endl;
 }
