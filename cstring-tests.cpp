@@ -688,22 +688,66 @@ TEST_CASE("cstring16") {
 
 }
 
+static void check_less_than(const char *str1, const char *str2, bool result)
+{
+    string aux1 = string(str1) + "*";
+    string aux2 = string(str2) + "*";
+    string_view view1 = string_view{aux1.data(), aux1.size() - 1};
+    string_view view2 = string_view{aux2.data(), aux2.size() - 1};
+
+    CHECK(cstring_compare{}(cstring{str1}, cstring(str2)) == result);
+
+    CHECK(cstring_compare{}(cstring{str1}, static_cast<const char *>(str2)) == result);
+    CHECK(cstring_compare{}(cstring{str1}, std::string(str2)) == result);
+    CHECK(cstring_compare{}(cstring{str1}, std::string_view(str2)) == result);
+    CHECK(cstring_compare{}(cstring{str1}, view2) == result);
+
+    CHECK(cstring_compare{}(static_cast<const char *>(str1), cstring{str2}) == result);
+    CHECK(cstring_compare{}(std::string(str1), cstring{str2}) == result);
+    CHECK(cstring_compare{}(std::string_view(str1), cstring{str2}) == result);
+    CHECK(cstring_compare{}(view1, cstring{str2}) == result);
+}
+
 TEST_CASE("cstring_compare") {
+
+  SUBCASE("less-than")
+  {
+    check_less_than("", "a", true);
+    check_less_than("", "", false);
+    check_less_than("a", "", false);
+
+    check_less_than("a", "b", true);
+    check_less_than("a", "a", false);
+    check_less_than("b", "a", false);
+  }
 
   SUBCASE("general") {
 
     std::map<cstring, int, cstring_compare> cstring_map;
+    decltype(cstring_map)::iterator it;
+
     cstring_map[cstring("apple")] = 1;
     cstring_map[cstring("banana")] = 2;
 
     CHECK(cstring_map.size() == 2);
-
-    CHECK(cstring_map.find(cstring("apple")) != cstring_map.end());
-    CHECK(cstring_map.find(static_cast<const char *>("apple")) != cstring_map.end());
-    CHECK(cstring_map.find(std::string("banana")) != cstring_map.end());
-    CHECK(cstring_map.find(std::string_view("banana")) != cstring_map.end());
-
     CHECK(cstring_map.begin()->first == cstring("apple"));
+    CHECK(cstring_map.rbegin()->first == cstring("banana"));
+
+    it = cstring_map.find(cstring("apple"));
+    CHECK((it != cstring_map.end() && it->second == 1));
+
+    it = cstring_map.find(static_cast<const char *>("apple"));
+    CHECK((it != cstring_map.end() && it->second == 1));
+
+    it = cstring_map.find(std::string("banana"));
+    CHECK((it != cstring_map.end() && it->second == 2));
+
+    it = cstring_map.find(std::string_view("banana"));
+    CHECK((it != cstring_map.end() && it->second == 2));
+
+    const char buf[] = "apple*";
+    it = cstring_map.lower_bound(string_view{buf, 5}); // searching for apple
+    CHECK((it != cstring_map.end() && it->second == 1));
   }
 
 }

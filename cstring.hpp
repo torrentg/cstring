@@ -43,7 +43,7 @@ namespace gto {
  * @see https://github.com/torrentg/cstring
  * 
  * @note This class is immutable.
- * @version 1.0.5
+ * @version 1.0.6
  */
 template<typename Char,
          typename Traits = std::char_traits<Char>,
@@ -646,10 +646,10 @@ struct basic_cstring_compare
 
     // basic_cstring vs std::basic:string_view
     bool operator()(const basic_cstring<Char, Traits, Allocator>& lhs, const std::basic_string_view<Char, Traits>& rhs) const noexcept {
-        return lhs.compare(rhs.data()) < 0;
+        return lhs.compare(rhs) < 0;
     }
     bool operator()(const std::basic_string_view<Char, Traits>& lhs, const basic_cstring<Char, Traits, Allocator>& rhs) const noexcept {
-        return rhs.compare(lhs.data()) > 0;
+        return rhs.compare(lhs) > 0;
     }
 };
 

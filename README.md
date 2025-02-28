@@ -33,7 +33,7 @@ Read the [`cstring-example.cpp`](cstring-example.cpp) file to see how to use it.
 #include "cstring.hpp"
 ...
 // just use it like a const std::string
-gto::cstring str1 = "hello world!"
+gto::cstring str = "hello world!"
 std::cout << "Length of '" << str << "' is " << str.length() << std::endl;
 ```
 
