@@ -110,6 +110,9 @@ class basic_cstring
         static_assert(sizeof(value_type) <= sizeof(prefix_type));
         assert(str != nullptr);
 
+        if (str == m_empty.str)
+            return const_cast<atomic_prefix_type *>(&m_empty.counter);
+
         pointer ptr = const_cast<pointer>(str) - (2 * sizeof(prefix_type)) / sizeof(value_type);
         return reinterpret_cast<atomic_prefix_type *>(ptr);
     }
@@ -119,6 +122,9 @@ class basic_cstring
     {
         static_assert(sizeof(value_type) <= sizeof(prefix_type));
         assert(str != nullptr);
+
+        if (str == m_empty.str)
+            return const_cast<prefix_type *>(&m_empty.len);
 
         pointer ptr = const_cast<pointer>(str) - (sizeof(prefix_type) / sizeof(value_type));
         return reinterpret_cast<prefix_type *>(ptr);
@@ -197,9 +203,6 @@ class basic_cstring
      */
     static void release(const_pointer str) noexcept
     {
-        if (!str || str == m_empty.str)
-            return;
-
         atomic_prefix_type *ptr = get_ptr_to_counter(str);
         prefix_type counts = ptr[0].load(std::memory_order_relaxed);
 
