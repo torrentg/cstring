@@ -197,15 +197,18 @@ class basic_cstring
      */
     static void release(const_pointer str) noexcept
     {
+        if (!str || str == m_empty.str)
+            return;
+
         atomic_prefix_type *ptr = get_ptr_to_counter(str);
         prefix_type counts = ptr[0].load(std::memory_order_relaxed);
-  
+
         if (counts == 0) // constant (eg. m_empty)
             return;
-        
+
         if (counts > 1)
             counts = ptr[0].fetch_sub(1, std::memory_order_relaxed);
-  
+
         if (counts == 1)
             deallocate(str);
     }

@@ -29,7 +29,7 @@ int main()
     cout << "first char not in [haeiou] appears at position " << str1.find_first_not_of("haeiou") << endl;
     cout << "last occurrence of char in [aeiou] is at position " << str1.find_last_of("aeiou") << endl;
     cout << "last occurrence of char not in [orld!] is at position " << str1.find_last_not_of("orld!") << endl;
-  
+
     cstring str2 = "   str   ";
 
     cout << "content = '" << str2 << "'" << endl;
@@ -37,12 +37,12 @@ int main()
     cout << "rtrim = '" << str2.rtrim() << "'" << endl;
     cout << "trim = '" << str2.trim() << "'" << endl;
     cout << "'" << str2 << "' is " << (str2 < str1 ? "": "not ") << "less than '" << str1 << "'" << endl;
-  
+
     cstring x1;
     cout << "x1.use_count() = " << x1.use_count() << endl;
     x1 = "foo";
     cout << "x1.use_count() = " << x1.use_count() << endl;
-  
+
     {
         cstring x2 = x1;
         cout << "x1.use_count() = " << x1.use_count() << endl;
@@ -50,7 +50,7 @@ int main()
              << "x2.data = " << x2 << ", "
              << "&x2.data = " << static_cast<const void*>(x2.data()) << endl;
     }
-  
+
     cout << "x1.use_count() = " << x1.use_count() << endl;
     cout << "&x1 = " << static_cast<const void*>(&x1) << ", "
          << "x1.data = " << x1 << ", "
