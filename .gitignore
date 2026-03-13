@@ -1,2 +1,7 @@
 .vscode
 temp/
+coverage/
+cstring-coverage
+cstring-coverage-*
+cstring-example
+cstring-tests

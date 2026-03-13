@@ -43,7 +43,7 @@ namespace gto {
  * @see https://github.com/torrentg/cstring
  * 
  * @note This class is immutable.
- * @version 1.0.6
+ * @version 1.0.7
  */
 template<typename Char,
          typename Traits = std::char_traits<Char>,
@@ -270,6 +270,13 @@ class basic_cstring
             m_str = content;
         }
     }
+
+    /**
+     * Constructs a cstring object from a string_view.
+     * 
+     * @param[in] v The string_view with the content and length to copy.
+     */
+    basic_cstring(basic_cstring_view v) : basic_cstring(v.data(), v.size()) {}
 
     /**
      * Destructor.

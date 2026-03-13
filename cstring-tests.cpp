@@ -97,6 +97,25 @@ TEST_CASE("cstring") {
     }
   }
 
+  SUBCASE("constructor (std::string_view)") {
+    {
+      cstring str{std::string_view("hello world")};
+      CHECK(str == "hello world");
+    }
+    {
+      cstring str{std::string_view("hello world", 5)};
+      CHECK(str == "hello");
+    }
+    {
+      cstring str{std::string_view()}; // empty view -> empty cstring
+      CHECK(str.empty());
+    }
+    {
+      cstring str{std::string("hello")}; // std::string -> std::string_view -> cstring
+      CHECK(str == "hello");
+    }
+  }
+
   SUBCASE("assignment") {
     {
       cstring str1("abc");
