@@ -241,7 +241,7 @@ class basic_cstring
      * 
      * @param[in] str The NULL-terminated string to copy (NULL means the empty string).
      */
-    basic_cstring(const_pointer str) : basic_cstring(str, (str == nullptr ? 0 : traits_type::length(str))) {}
+    basic_cstring(const_pointer str) : basic_cstring(str, (str == nullptr || str[0] == value_type() ? 0 : traits_type::length(str))) {}
 
     /** 
      * Constructs a cstring with the first len characters pointed by str.
